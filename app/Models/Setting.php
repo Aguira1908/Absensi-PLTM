@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Setting extends Model
+{
+  //
+  protected $fillable = [
+    'id',
+    'office_latitude',
+    'office_longitude',
+    'attendance_radius',
+  ];
+}
