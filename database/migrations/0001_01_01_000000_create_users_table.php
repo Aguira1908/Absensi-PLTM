@@ -8,12 +8,6 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * Urutan dependency saat ini:
-     *   roles (0000_00_00_000000) → sudah ada
-     *   shifts (0000_00_00_000002) → sudah ada
-     *   departments (0002_02_02_000012) → sudah ada (tanpa FK manager_id)
-     *   users (file ini) → setelah insert, tambahkan FK manager_id ke departments
      */
     public function up(): void
     {
