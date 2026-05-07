@@ -10,6 +10,7 @@ use App\Filament\Resources\Attendances\Tables\AttendancesTable;
 use App\Models\Attendance;
 use BackedEnum;
 use Filament\Resources\Resource;
+use Filament\Forms\Form;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -18,53 +19,53 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AttendanceResource extends Resource
 {
-    protected static ?string $model = Attendance::class;
+  protected static ?string $model = Attendance::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
+  protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Data Kehadiran';
+  protected static \UnitEnum|string|null $navigationGroup = 'Data Kehadiran';
 
-    protected static ?string $navigationLabel = 'Absensi';
+  protected static ?string $navigationLabel = 'Absensi';
 
-    protected static ?string $modelLabel = 'Absensi';
+  protected static ?string $modelLabel = 'Absensi';
 
-    protected static ?string $pluralModelLabel = 'Absensi';
+  protected static ?string $pluralModelLabel = 'Absensi';
 
-    protected static ?int $navigationSort = 1;
+  protected static ?int $navigationSort = 1;
 
-    protected static ?string $recordTitleAttribute = 'id';
+  protected static ?string $recordTitleAttribute = 'id';
 
-    public static function form(Schema $schema): Schema
-    {
-        return AttendanceForm::configure($schema);
-    }
+  public static function form(Schema $schema): Schema
+  {
+    return AttendanceForm::configure($schema);
+  }
 
-    public static function table(Table $table): Table
-    {
-        return AttendancesTable::configure($table);
-    }
+  public static function table(Table $table): Table
+  {
+    return AttendancesTable::configure($table);
+  }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+  public static function getRelations(): array
+  {
+    return [
+      //
+    ];
+  }
 
-    public static function getPages(): array
-    {
-        return [
-            'index' => ListAttendances::route('/'),
-            'create' => CreateAttendance::route('/create'),
-            'edit' => EditAttendance::route('/{record}/edit'),
-        ];
-    }
+  public static function getPages(): array
+  {
+    return [
+      'index' => ListAttendances::route('/'),
+      'create' => CreateAttendance::route('/create'),
+      'edit' => EditAttendance::route('/{record}/edit'),
+    ];
+  }
 
-    public static function getRecordRouteBindingEloquentQuery(): Builder
-    {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-    }
+  public static function getRecordRouteBindingEloquentQuery(): Builder
+  {
+    return parent::getRecordRouteBindingEloquentQuery()
+      ->withoutGlobalScopes([
+        SoftDeletingScope::class,
+      ]);
+  }
 }
