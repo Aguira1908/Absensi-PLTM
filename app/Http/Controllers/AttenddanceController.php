@@ -21,9 +21,27 @@ class AttenddanceController extends Controller
   /**
    * Show the form for creating a new resource.
    */
-  public function create()
+  public function create(\App\Services\AttendanceLogicService $attendanceLogicService)
   {
-    return Inertia::render('Absensi');
+    $user = request()->user();
+
+    // Ambil shift user
+    $shift = \App\Models\Shift::query()->find($user->default_shift_id);
+    if (!$shift) {
+      return Inertia::render('Absensi', [
+        'todayAttendance' => null
+      ]);
+    }
+
+    // Hitung tanggal logis dan rentang waktu valid untuk absensi
+    $shiftWindow = $attendanceLogicService->getShiftWindow($shift);
+    $today = $shiftWindow['logical_date'];
+
+    $todayAttendance = $user->attendances()->where('logical_date', $today)->first();
+
+    return Inertia::render('Absensi', [
+      'todayAttendance' => $todayAttendance
+    ]);
   }
 
   /**
@@ -43,7 +61,7 @@ class AttenddanceController extends Controller
     $user = $request->user();
 
     // Ambil shift user
-    $shift = \App\Models\Shift::find($user->default_shift_id);
+    $shift = \App\Models\Shift::query()->find($user->default_shift_id);
     if (!$shift) {
       return back()->withErrors(['type' => 'Anda belum memiliki jadwal shift.']);
     }
