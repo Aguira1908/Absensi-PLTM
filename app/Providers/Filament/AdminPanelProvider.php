@@ -3,6 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\CustomLogin;
+use App\Filament\Widgets\AttendanceTodayWidget;
+use App\Filament\Widgets\AttendanceTrendWidget;
+use App\Filament\Widgets\StatsOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -40,8 +43,10 @@ class AdminPanelProvider extends PanelProvider
       ])
       ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
       ->widgets([
-        AccountWidget::class,
-        FilamentInfoWidget::class,
+        // AccountWidget::class,
+        // StatsOverviewWidget::class,
+        // AttendanceTrendWidget::class,
+        // AttendanceTodayWidget::class,
       ])
       ->middleware([
         EncryptCookies::class,
