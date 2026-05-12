@@ -12,6 +12,9 @@ export default function Absensi({ auth, todayAttendance }) {
     todayAttendance && todayAttendance.clock_out_time !== null;
   const isFullyCompleted = isLocked || hasClockedOut;
 
+  // URL foto absen masuk yang sudah tersimpan
+  const savedClockInPhoto = todayAttendance?.clock_in_photo_url ?? null;
+
   const { data, setData, post, processing, errors, reset } = useForm({
     type: hasClockedIn && !isFullyCompleted ? 'pulang' : 'masuk',
     status: 'hadir',
@@ -148,20 +151,34 @@ export default function Absensi({ auth, todayAttendance }) {
                     Silakan pilih tipe dan status absensi Anda hari ini.
                   </p>
                 </div>
-
                 {/* Type Selector (Masuk / Pulang) */}
                 <div className="flex bg-gray-100 p-1 rounded-xl">
                   <button
                     type="button"
-                    onClick={() => !hasClockedIn && handleTypeChange('masuk')}
-                    disabled={hasClockedIn}
-                    className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                    onClick={() => handleTypeChange('masuk')}
+                    className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 ${
                       data.type === 'masuk'
                         ? 'bg-white text-indigo-600 shadow-sm'
                         : 'text-gray-500 hover:text-gray-700'
-                    } ${hasClockedIn ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    }`}
                   >
                     Absen Masuk
+                    {hasClockedIn && (
+                      <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                        <svg
+                          width="8"
+                          height="8"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -178,9 +195,8 @@ export default function Absensi({ auth, todayAttendance }) {
                     Absen Pulang
                   </button>
                 </div>
-
                 {/* Status Selector (Only show if type is 'masuk') */}
-                {data.type === 'masuk' && (
+                {data.type === 'masuk' && !hasClockedIn && (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {['hadir', 'izin', 'sakit', 'alpa'].map((statusOption) => (
                       <button
@@ -208,7 +224,6 @@ export default function Absensi({ auth, todayAttendance }) {
                     ))}
                   </div>
                 )}
-
                 {Object.keys(errors).length > 0 && (
                   <div className="w-full text-left p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 font-medium text-sm">
                     <ul className="list-disc pl-4 space-y-1">
@@ -218,106 +233,82 @@ export default function Absensi({ auth, todayAttendance }) {
                     </ul>
                   </div>
                 )}
-
-                {/* Form */}
-                <form
-                  onSubmit={submitAttendance}
-                  className="flex flex-col gap-6"
-                >
-                  {isHadirMode ? (
-                    <>
-                      <div
-                        className={`w-full text-center p-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
-                          isLocationReady
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-yellow-50 text-yellow-700'
-                        }`}
-                      >
-                        {isLocationReady ? (
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            className="w-5 h-5 animate-spin"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
-                        )}
-                        {locationStatus}
+                {/* ── Jika sudah absen masuk & tab masuk aktif: tampilkan foto saja ── */}
+                {hasClockedIn && data.type === 'masuk' ? (
+                  <div className="flex flex-col gap-4">
+                    {/* Banner sukses */}
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-green-50 border border-green-100">
+                      <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
                       </div>
-
-                      <div className="w-full relative rounded-2xl overflow-hidden bg-gray-100 shadow-inner aspect-[4/3] flex items-center justify-center border-2 border-gray-200">
-                        {!previewImage ? (
-                          isLocationReady ? (
-                            <Webcam
-                              audio={false}
-                              ref={webcamRef}
-                              screenshotFormat="image/jpeg"
-                              videoConstraints={{ facingMode: 'user' }}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center gap-3 text-gray-400">
-                              <svg
-                                className="w-10 h-10 animate-pulse"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={1.5}
-                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={1.5}
-                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                              </svg>
-                              <span className="text-sm font-medium">
-                                Menunggu GPS...
-                              </span>
-                            </div>
-                          )
-                        ) : (
-                          <img
-                            src={previewImage}
-                            alt="Preview Absensi"
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                      <div>
+                        <p className="text-sm font-semibold text-green-800">
+                          Absen masuk telah tercatat!
+                        </p>
+                        <p className="text-xs text-green-600 mt-0.5">
+                          {todayAttendance?.clock_in_time
+                            ? `Tercatat pukul ${new Date(todayAttendance.clock_in_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+                            : 'Kehadiran Anda sudah dicatat hari ini.'}
+                        </p>
                       </div>
+                    </div>
 
-                      <div className="flex flex-col gap-3">
-                        {!previewImage ? (
-                          <button
-                            type="button"
-                            onClick={capturePhoto}
-                            disabled={!isLocationReady || processing}
-                            className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 hover:shadow-lg transition-all flex justify-center items-center gap-2"
-                          >
+                    {/* Foto absen masuk */}
+                    {savedClockInPhoto ? (
+                      <div className="relative w-full rounded-2xl overflow-hidden aspect-[4/3] bg-gray-100">
+                        <img
+                          src={savedClockInPhoto}
+                          alt="Foto Absen Masuk"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
+                          <p className="text-white text-xs font-semibold">
+                            Foto Absen Masuk
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full rounded-2xl bg-gray-100 aspect-[4/3] flex items-center justify-center">
+                        <p className="text-sm text-gray-400">
+                          Tidak ada foto tersimpan
+                        </p>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-center text-gray-400">
+                      Klik{' '}
+                      <span className="font-semibold text-gray-600">
+                        Absen Pulang
+                      </span>{' '}
+                      untuk mencatat kepulangan Anda.
+                    </p>
+                  </div>
+                ) : (
+                  <form
+                    onSubmit={submitAttendance}
+                    className="flex flex-col gap-6"
+                  >
+                    {isHadirMode ? (
+                      <>
+                        <div
+                          className={`w-full text-center p-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                            isLocationReady
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-yellow-50 text-yellow-700'
+                          }`}
+                        >
+                          {isLocationReady ? (
                             <svg
                               className="w-5 h-5"
                               fill="none"
@@ -328,24 +319,79 @@ export default function Absensi({ auth, todayAttendance }) {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                                d="M5 13l4 4L19 7"
                               />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-5 h-5 animate-spin"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                               />
                             </svg>
-                            Jepret Wajah
-                          </button>
-                        ) : (
-                          <div className="flex gap-3">
+                          )}
+                          {locationStatus}
+                        </div>
+
+                        <div className="w-full relative rounded-2xl overflow-hidden bg-gray-100 shadow-inner aspect-[4/3] flex items-center justify-center border-2 border-gray-200">
+                          {!previewImage ? (
+                            isLocationReady ? (
+                              <Webcam
+                                audio={false}
+                                ref={webcamRef}
+                                screenshotFormat="image/jpeg"
+                                videoConstraints={{ facingMode: 'user' }}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex flex-col items-center gap-3 text-gray-400">
+                                <svg
+                                  className="w-10 h-10 animate-pulse"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                </svg>
+                                <span className="text-sm font-medium">
+                                  Menunggu GPS...
+                                </span>
+                              </div>
+                            )
+                          ) : (
+                            <img
+                              src={previewImage}
+                              alt="Preview Absensi"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                          {!previewImage ? (
                             <button
                               type="button"
-                              onClick={retakePhoto}
-                              disabled={processing}
-                              className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={capturePhoto}
+                              disabled={!isLocationReady || processing}
+                              className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 hover:shadow-lg transition-all flex justify-center items-center gap-2"
                             >
                               <svg
                                 className="w-5 h-5"
@@ -357,89 +403,120 @@ export default function Absensi({ auth, todayAttendance }) {
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth={2}
-                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
                                 />
-                              </svg>
-                              Ulangi
-                            </button>
-                            <button
-                              type="submit"
-                              disabled={processing}
-                              className="flex-1 py-3.5 bg-green-600 text-white rounded-xl font-semibold shadow-md hover:bg-green-700 hover:shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
+                                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                                 />
                               </svg>
-                              {processing ? 'Mengirim...' : 'Kirim'}
+                              Jepret Wajah
                             </button>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-full text-left p-4 rounded-xl bg-blue-50 border border-blue-100">
-                        <p className="text-sm text-blue-700 font-medium">
-                          Anda memilih status{' '}
-                          <span className="uppercase font-bold">
-                            {data.status}
-                          </span>
-                          . Foto wajah dan lokasi tidak diwajibkan.
-                        </p>
-                      </div>
+                          ) : (
+                            <div className="flex gap-3">
+                              <button
+                                type="button"
+                                onClick={retakePhoto}
+                                disabled={processing}
+                                className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                  />
+                                </svg>
+                                Ulangi
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-1 py-3.5 bg-green-600 text-white rounded-xl font-semibold shadow-md hover:bg-green-700 hover:shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                {processing ? 'Mengirim...' : 'Kirim'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-full text-left p-4 rounded-xl bg-blue-50 border border-blue-100">
+                          <p className="text-sm text-blue-700 font-medium">
+                            Anda memilih status{' '}
+                            <span className="uppercase font-bold">
+                              {data.status}
+                            </span>
+                            . Foto wajah dan lokasi tidak diwajibkan.
+                          </p>
+                        </div>
 
-                      <div className="w-full">
-                        <label
-                          htmlFor="reason"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          Catatan / Alasan (Opsional)
-                        </label>
-                        <textarea
-                          id="reason"
-                          name="reason"
-                          rows="3"
-                          value={data.reason}
-                          onChange={(e) => setData('reason', e.target.value)}
-                          disabled={processing}
-                          className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none p-3 disabled:opacity-50 disabled:bg-gray-100"
-                          placeholder="Masukkan alasan atau keterangan tambahan..."
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={processing}
-                        className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        <div className="w-full">
+                          <label
+                            htmlFor="reason"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Catatan / Alasan (Opsional)
+                          </label>
+                          <textarea
+                            id="reason"
+                            name="reason"
+                            rows="3"
+                            value={data.reason}
+                            onChange={(e) => setData('reason', e.target.value)}
+                            disabled={processing}
+                            className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none p-3 disabled:opacity-50 disabled:bg-gray-100"
+                            placeholder="Masukkan alasan atau keterangan tambahan..."
                           />
-                        </svg>
-                        {processing ? 'Mengirim Data...' : 'Kirim Laporan'}
-                      </button>
-                    </>
-                  )}
-                </form>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={processing}
+                          className="w-full py-3.5 bg-indigo-600 text-white rounded-xl font-semibold shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                            />
+                          </svg>
+                          {processing ? 'Mengirim Data...' : 'Kirim Laporan'}
+                        </button>
+                      </>
+                    )}
+                  </form>
+                )}{' '}
+                {/* end hasClockedIn && masuk check */}
               </>
             )}
           </div>
