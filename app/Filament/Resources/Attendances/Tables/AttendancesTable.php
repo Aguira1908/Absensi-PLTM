@@ -57,6 +57,7 @@ class AttendancesTable
           ->placeholder('-'),
         ImageColumn::make('clock_in_photo')
           ->label('Foto Masuk')
+          ->disk('public')
           ->circular()
           ->toggleable(isToggledHiddenByDefault: true),
         TextColumn::make('clock_out_time')
@@ -66,6 +67,7 @@ class AttendancesTable
           ->placeholder('-'),
         ImageColumn::make('clock_out_photo')
           ->label('Foto Pulang')
+          ->disk('public')
           ->circular()
           ->toggleable(isToggledHiddenByDefault: true),
       ])
