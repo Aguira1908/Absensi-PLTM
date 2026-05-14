@@ -66,6 +66,7 @@ class AttendanceForm
             FileUpload::make('clock_in_photo')
               ->label('Foto Masuk')
               ->image()
+              ->disk('public')
               ->directory('attendances/clock_in')
               ->columnSpanFull(),
           ])
@@ -85,6 +86,7 @@ class AttendanceForm
             FileUpload::make('clock_out_photo')
               ->label('Foto Pulang')
               ->image()
+              ->disk('public')
               ->directory('attendances/clock_out')
               ->columnSpanFull(),
           ])
